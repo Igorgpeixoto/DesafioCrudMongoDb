@@ -1,5 +1,7 @@
 package Desafio.Crud.demo.service;
 
+import Desafio.Crud.demo.dto.CoordenadorDTO;
+import Desafio.Crud.demo.mapper.CoordenadorMapper;
 import Desafio.Crud.demo.model.CoordenadorModel;
 import Desafio.Crud.demo.model.EstagiarioModel;
 import Desafio.Crud.demo.repository.CoordenadorRepository;
@@ -7,50 +9,64 @@ import Desafio.Crud.demo.repository.EstagiarioRepository;
 import Desafio.Crud.demo.repository.PessoaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
 public class CoordenadorService {
+
     private final CoordenadorRepository repository;
     private final PessoaRepository pessoaRepository;
     private final EstagiarioRepository estagiarioRepository;
+    private final CoordenadorMapper mapper;  // Mapper para converter entre DTO e Model
 
-    public CoordenadorModel criar(CoordenadorModel c) {
-        if (repository.findByMatricula(c.getMatricula()).isPresent()) {
+    public CoordenadorDTO criar(CoordenadorDTO dto) {
+        CoordenadorModel model = mapper.toEntity(dto);
+
+        if (repository.findByMatricula(model.getMatricula()).isPresent()) {
             throw new IllegalArgumentException("Matrícula já existe.");
         }
-        if (pessoaRepository.findByCpf(c.getCpf()).isEmpty()) {
+        if (pessoaRepository.findByCpf(model.getCpf()).isEmpty()) {
             throw new IllegalArgumentException("Pessoa não cadastrada.");
         }
-        return repository.save(c);
+
+        CoordenadorModel salvo = repository.save(model);
+        return mapper.toDTO(salvo);
     }
 
-    public CoordenadorModel atualizar(String cpf, CoordenadorModel coordenadorAtualizado) {
-        CoordenadorModel existente = buscar(cpf);
-        existente.setNomeCompleto(coordenadorAtualizado.getNomeCompleto());
-        existente.setDataNascimento(coordenadorAtualizado.getDataNascimento());
-        existente.setSetor(coordenadorAtualizado.getSetor());
-        return repository.save(existente);
+    public CoordenadorDTO atualizar(String cpf, CoordenadorDTO dtoAtualizado) {
+        CoordenadorModel existente = buscarEntity(cpf);
+
+        existente.setNomeCompleto(dtoAtualizado.getNomeCompleto());
+        existente.setDataNascimento(dtoAtualizado.getDataNascimento());
+        existente.setSetor(dtoAtualizado.getSetor());
+
+        CoordenadorModel salvo = repository.save(existente);
+        return mapper.toDTO(salvo);
     }
 
-    public CoordenadorModel buscar(String cpf) {
-        Optional<CoordenadorModel> coordenadorModel = repository.findByCpf(cpf);
-        return coordenadorModel.orElse(null);
+    public CoordenadorDTO buscar(String cpf) {
+        CoordenadorModel model = buscarEntity(cpf);
+        if (model == null) {
+            return null;
+        }
+        return mapper.toDTO(model);
     }
 
-    public List<CoordenadorModel> listar() {
-        return repository.findAll();
+    public List<CoordenadorDTO> listar() {
+        List<CoordenadorModel> modelos = repository.findAll();
+        return modelos.stream()
+                .map(mapper::toDTO)
+                .toList();
     }
 
     public void deletar(String cpf) {
         repository.findByCpf(cpf).ifPresent(repository::delete);
     }
 
-    public CoordenadorModel adicionarEstagiarios(String matriculaCoord, List<String> matriculasEstagiarios) {
+    public CoordenadorDTO adicionarEstagiarios(String matriculaCoord, List<String> matriculasEstagiarios) {
         CoordenadorModel coordenador = repository.findByMatricula(matriculaCoord)
                 .orElseThrow(() -> new NoSuchElementException("Coordenador não encontrado."));
 
@@ -60,6 +76,13 @@ public class CoordenadorService {
                 .toList();
 
         coordenador.setEstagiarios(estagiarios);
-        return repository.save(coordenador);
+
+        CoordenadorModel salvo = repository.save(coordenador);
+        return mapper.toDTO(salvo);
+    }
+
+    // Método privado para buscar entidade (Model) sem expor para fora
+    private CoordenadorModel buscarEntity(String cpf) {
+        return repository.findByCpf(cpf).orElse(null);
     }
 }

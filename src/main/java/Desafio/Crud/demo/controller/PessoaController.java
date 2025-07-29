@@ -1,10 +1,10 @@
 package Desafio.Crud.demo.controller;
+import Desafio.Crud.demo.dto.PessoaDTO;
 import Desafio.Crud.demo.model.PessoaModel;
 import Desafio.Crud.demo.service.PessoaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -15,23 +15,27 @@ public class PessoaController {
     private final PessoaService pessoaService;
 
     @PostMapping
-    public ResponseEntity<PessoaModel> criar(@RequestBody PessoaModel pessoa) {
-        return ResponseEntity.ok(pessoaService.criar(pessoa));
+    public ResponseEntity<PessoaDTO> criar(@RequestBody PessoaDTO dto) {
+        PessoaDTO criado = pessoaService.criar(dto);
+        return ResponseEntity.ok(criado);
     }
 
     @GetMapping
-    public ResponseEntity<List<PessoaModel>> listar() {
-        return ResponseEntity.ok(pessoaService.listar());
+    public ResponseEntity<List<PessoaDTO>> listar() {
+        List<PessoaDTO> lista = pessoaService.listar();
+        return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/buscar/{cpf}")
-    public ResponseEntity<PessoaModel> buscar(@PathVariable String cpf) {
-        return ResponseEntity.ok(pessoaService.buscarPorCpf(cpf));
+    public ResponseEntity<PessoaDTO> buscar(@PathVariable String cpf) {
+        PessoaDTO dto = pessoaService.buscarPorCpf(cpf);
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/atualizar/{cpf}")
-    public ResponseEntity<PessoaModel> atualizar(@PathVariable String cpf, @RequestBody PessoaModel p) {
-        return ResponseEntity.ok(pessoaService.atualizar(cpf, p));
+    public ResponseEntity<PessoaDTO> atualizar(@PathVariable String cpf, @RequestBody PessoaDTO dto) {
+        PessoaDTO atualizado = pessoaService.atualizar(cpf, dto);
+        return ResponseEntity.ok(atualizado);
     }
 
     @DeleteMapping("/deletar/{cpf}")

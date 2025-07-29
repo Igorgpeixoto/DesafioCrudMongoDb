@@ -1,4 +1,5 @@
 package Desafio.Crud.demo.controller;
+import Desafio.Crud.demo.dto.EstagiarioDTO;
 import Desafio.Crud.demo.model.EstagiarioModel;
 import Desafio.Crud.demo.service.EstagiarioService;
 import lombok.RequiredArgsConstructor;
@@ -10,29 +11,32 @@ import java.util.List;
 @RestController
 @RequestMapping("/estagiarios")
 @RequiredArgsConstructor
-
 public class EstagiarioController {
 
     private final EstagiarioService estagiarioService;
 
     @PostMapping
-    public ResponseEntity<EstagiarioModel> criar(@RequestBody EstagiarioModel e) {
-        return ResponseEntity.ok(estagiarioService.criar(e));
+    public ResponseEntity<EstagiarioDTO> criar(@RequestBody EstagiarioDTO dto) {
+        EstagiarioDTO criado = estagiarioService.criar(dto);
+        return ResponseEntity.ok(criado);
     }
 
     @GetMapping
-    public ResponseEntity<List<EstagiarioModel>> listar() {
-        return ResponseEntity.ok(estagiarioService.listar());
+    public ResponseEntity<List<EstagiarioDTO>> listar() {
+        List<EstagiarioDTO> lista = estagiarioService.listar();
+        return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/buscar/{cpf}")
-    public ResponseEntity<EstagiarioModel> buscar(@PathVariable String cpf) {
-        return ResponseEntity.ok(estagiarioService.buscarPorCpf(cpf));
+    public ResponseEntity<EstagiarioDTO> buscar(@PathVariable String cpf) {
+        EstagiarioDTO dto = estagiarioService.buscarPorCpf(cpf);
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/atualizar/{cpf}")
-    public ResponseEntity<EstagiarioModel> atualizar(@PathVariable String cpf, @RequestBody EstagiarioModel e) {
-        return ResponseEntity.ok(estagiarioService.atualizar(cpf, e));
+    public ResponseEntity<EstagiarioDTO> atualizar(@PathVariable String cpf, @RequestBody EstagiarioDTO dto) {
+        EstagiarioDTO atualizado = estagiarioService.atualizar(cpf, dto);
+        return ResponseEntity.ok(atualizado);
     }
 
     @DeleteMapping("/deletar/{cpf}")
