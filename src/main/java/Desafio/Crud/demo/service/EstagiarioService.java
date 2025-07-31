@@ -1,6 +1,7 @@
 package Desafio.Crud.demo.service;
 import Desafio.Crud.demo.dto.EstagiarioDTO;
 import Desafio.Crud.demo.mapper.EstagiarioMapper;
+import Desafio.Crud.demo.mensageria.producer.EstagiarioProducer;
 import Desafio.Crud.demo.model.EstagiarioModel;
 import Desafio.Crud.demo.repository.EstagiarioRepository;
 import Desafio.Crud.demo.repository.PessoaRepository;
@@ -12,23 +13,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EstagiarioService {
 
+    private final EstagiarioProducer estagiarioProducer;
     private final EstagiarioRepository estagiarioRepository;
     private final PessoaRepository pessoaRepository;
     private final EstagiarioMapper mapper;  // Mapper para converter DTO <-> Model
 
     public EstagiarioDTO criar(EstagiarioDTO dto) {
         EstagiarioModel model = mapper.toEntity(dto);
-
         pessoaRepository.findByCpf(model.getCpf())
                 .orElseThrow(() -> new IllegalArgumentException("Pessoa com CPF não encontrada."));
-
         if (estagiarioRepository.findByMatricula(model.getMatricula()).isPresent()) {
             throw new IllegalArgumentException("Matrícula já em uso.");
         }
-
         EstagiarioModel salvo = estagiarioRepository.save(model);
-        return mapper.toDTO(salvo);
+        EstagiarioDTO criado = mapper.toDTO(salvo);
+        estagiarioProducer.enviar(criado); // 📨 Envia para RabbitMQ
+        return criado;
     }
+
 
     public EstagiarioDTO atualizar(String cpf, EstagiarioDTO dtoAtualizado) {
         EstagiarioModel existente = buscarEntityPorCpf(cpf);

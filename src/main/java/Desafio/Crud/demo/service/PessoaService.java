@@ -2,6 +2,7 @@ package Desafio.Crud.demo.service;
 
 import Desafio.Crud.demo.dto.PessoaDTO;
 import Desafio.Crud.demo.mapper.PessoaMapper;
+import Desafio.Crud.demo.mensageria.producer.PessoaProducer;
 import Desafio.Crud.demo.model.PessoaModel;
 import Desafio.Crud.demo.repository.PessoaRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PessoaService {
 
+    private final PessoaProducer pessoaProducer;
     private final PessoaRepository pessoaRepository;
     private final PessoaMapper mapper;  // Mapper para converter DTO <-> Model
 
@@ -20,13 +22,15 @@ public class PessoaService {
     public PessoaDTO criar(PessoaDTO dto) {
         PessoaModel model = mapper.toEntity(dto);
 
-
         if (pessoaRepository.findByCpf(model.getCpf()).isPresent()) {
             throw new IllegalArgumentException("CPF já cadastrado.");
         }
 
         PessoaModel salvo = pessoaRepository.save(model);
-        return mapper.toDTO(salvo);
+        PessoaDTO criado = mapper.toDTO(salvo);
+
+        pessoaProducer.enviar(criado);
+        return criado;
     }
 
     // Atualiza Pessoa

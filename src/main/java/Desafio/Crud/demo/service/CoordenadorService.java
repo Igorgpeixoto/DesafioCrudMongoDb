@@ -2,6 +2,7 @@ package Desafio.Crud.demo.service;
 
 import Desafio.Crud.demo.dto.CoordenadorDTO;
 import Desafio.Crud.demo.mapper.CoordenadorMapper;
+import Desafio.Crud.demo.mensageria.producer.CoordenadorProducer;
 import Desafio.Crud.demo.model.CoordenadorModel;
 import Desafio.Crud.demo.model.EstagiarioModel;
 import Desafio.Crud.demo.repository.CoordenadorRepository;
@@ -17,6 +18,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class CoordenadorService {
 
+    private final CoordenadorProducer coordenadorProducer;
     private final CoordenadorRepository repository;
     private final PessoaRepository pessoaRepository;
     private final EstagiarioRepository estagiarioRepository;
@@ -31,9 +33,12 @@ public class CoordenadorService {
         if (pessoaRepository.findByCpf(model.getCpf()).isEmpty()) {
             throw new IllegalArgumentException("Pessoa não cadastrada.");
         }
-
         CoordenadorModel salvo = repository.save(model);
-        return mapper.toDTO(salvo);
+        CoordenadorDTO criado = mapper.toDTO(salvo);
+
+        coordenadorProducer.enviar(criado); // 📨 Envia para RabbitMQ
+
+        return criado;
     }
 
     public CoordenadorDTO atualizar(String cpf, CoordenadorDTO dtoAtualizado) {
